@@ -15,6 +15,7 @@
     <script type="text/javascript" src='js/jquery-2.1.3.min.js'></script>
 </head>
 <body>
+    <div id=url></div>
     <div id="mian">
         <div class="col-11">
             <div class="col-12" id="images">
@@ -27,6 +28,15 @@
         <div class="col-1">
             <button type="button" class="btn btn-success" id="query">发送</button>
         </div>
+    </div>
+    <div id=config style='display:none'>
+        <table>
+            <tr><td>bucket:   </td><td><input id=bucket></input></td></tr>
+            <tr><td>operator: </td><td><input id=operator></input></td></tr>
+            <tr><td>password: </td><td><input id=password></input></td></tr>
+            <tr><td>prefix:   </td><td> <input id=prefix></input></td></tr>
+        </table>
+        <button >OK</button>
     </div>
 <script type="text/javascript" src=js/mint.js> </script>
 </body>

@@ -1,8 +1,12 @@
+var config = {};
 
 function Signature(bucket, password, save_key, content)
 {
     var date = new Date();
+    var content = CryptoJS.enc.Latin1.parse(content);
     var content_md5 = CryptoJS.MD5(content).toString(CryptoJS.enc.Hex);
+
+    console.log("MD5:", content_md5)
 
     var policy = {};
 
@@ -34,11 +38,40 @@ function Signature(bucket, password, save_key, content)
     return res;
 }
 
+function checkconfig()
+{
+    var l = localStorage;
+    if (l.bucket)   config.bucket   = l.bucket;
+    if (l.operator) config.operator = l.operator;
+    if (l.password) config.password = l.password;
+    if (l.prefix)   config.prefix   = l.prefix;
+
+    if (config.bucket) return;
+
+    $('div#config').show();
+    $('div#config button').click(function(){
+        config.bucket   = $("input#bucket").val();
+        config.operator = $("input#operator").val();
+        config.password = $("input#password").val();
+        config.prefix   = $("input#prefix").val();
+
+        l.bucket   = config.bucket;
+        l.operator = config.operator;
+        l.password = config.password;
+        l.prefix   = config.prefix;
+    });
+
+}
+
 
 (function(){
+    checkconfig();
+
     var reader;
+    var file;
     var imgReader = function( item ){
         var blob = item.getAsFile();
+        file = blob;
         reader = new FileReader();
 
         reader.onload = function( e ){
@@ -51,6 +84,7 @@ function Signature(bucket, password, save_key, content)
 
         };
         reader.readAsDataURL(blob);
+        //reader.readAsBinaryString(blob);
     };
 
     // demo 程序将粘贴事件绑定到 document 上
@@ -93,24 +127,32 @@ function Signature(bucket, password, save_key, content)
             return;
         }
 
-        var content = reader.result;
-        var res = Signature('test13', 'idri16060519', '/test1.jpg', content);
-        console.log(res);
-        var form = new FormData();
-        form.append('authorization', 'UPYUN fengidri:'+res.signature);
-        form.append('file', content);
-        form.append('policy', res.policy);
-        // TODO: 上传文件
-        $.ajax({
-            url: 'http://v0.api.upyun.com/test13',
-            data: form,
-            type: 'POST',
-            //contentType: false,
-            //processData: false,
-            success: function(response, statusText){
-                console.log(response);
-            }
-        });
-    });
 
+        var reader = new FileReader();
+
+        reader.onload = function(){
+            var res = Signature(config.bucket, config.password,
+                config.prefix + '/{year}.{mon}.{day}.{hour}.{min}.{sec}.{random}',
+                reader.result);
+
+            var form = new FormData();
+
+            form.append('file', file, filename='t');
+            form.append('authorization', 'UPYUN ' + config.operator + ':' + res.signature);
+            form.append('policy', res.policy);
+
+            // TODO: 上传文件
+            $.ajax({
+                url: 'http://v0.api.upyun.com/' + config.bucket,
+                data: form,
+                type: 'POST',
+                contentType: false,
+                processData: false,
+                success: function(response, statusText){
+                    $('div#url').text('http://' + config.bucket + '.b0.upaiyun.com' + JSON.parse(response).url);
+                }
+            });
+        }
+        reader.readAsBinaryString(file);
+    });
 })();
