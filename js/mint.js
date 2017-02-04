@@ -93,11 +93,24 @@ function Signature(bucket, password, save_key, content)
             return;
         }
 
-        var res = Signature('test13', 'idri16060519', '/test1.jpg', reader.result);
+        var content = reader.result;
+        var res = Signature('test13', 'idri16060519', '/test1.jpg', content);
+        console.log(res);
+        var form = new FormData();
+        form.append('authorization', 'UPYUN fengidri:'+res.signature);
+        form.append('file', content);
+        form.append('policy', res.policy);
         // TODO: 上传文件
         $.ajax({
-            url: ''
-        })
+            url: 'http://v0.api.upyun.com/test13',
+            data: form,
+            type: 'POST',
+            //contentType: false,
+            //processData: false,
+            success: function(response, statusText){
+                console.log(response);
+            }
+        });
     });
 
 })();
